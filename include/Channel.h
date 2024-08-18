@@ -1,6 +1,7 @@
 #pragma once
 #include <sys/epoll.h>
-#include "Epoll.h"
+#include "../include/Epoll.h"
+#include "../include/Socket.h"
 
 class Epoll;    // 前置声明Epoll类
 
@@ -13,8 +14,10 @@ private:
     uint32_t events_ = 0;   // fd_需要监视的事件, listenfd和clientfd需要监视EPOLLIN，clientfd可能还需要监视EPOLLOUT
     uint32_t revents_ = 0;  // fd_已发生的事件
 
+    bool islisten_ = false;  // listenf取值为true，客户端连上来的fd取值为false
+
 public:
-    Channel(Epoll* ep, int fd);
+    Channel(Epoll* ep, int fd, bool islisten);
     ~Channel();
     int fd();
     void useet();   // 采用边缘触发
@@ -24,4 +27,6 @@ public:
     bool inpoll();  // 返回inepoll_成员
     uint32_t events();
     uint32_t revents();
+
+    void handleevent(Socket* servsock); // 事件处理函数，epoll_wait()返回的时候，执行
 };
