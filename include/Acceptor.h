@@ -11,10 +11,14 @@ private:
     Socket* servsock_;
     Eventloop* loop_;   // Acceptor对应的事件循环，在构造函数中传入，因此不能在析构函数中释放
     Channel* acceptChannel_;
+
+    std::function<void(Socket*)>  newConnectioncd_;
 public:
     Acceptor(Eventloop* loop, uint16_t port);
     ~Acceptor();
 
     void newConnection();
+
+    void setnewConnectioncb(std::function<void(Socket*)>);
 };
 

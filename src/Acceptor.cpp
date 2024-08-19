@@ -30,5 +30,10 @@ void Acceptor::newConnection()
                  
     printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
-    Connection* conn = new Connection(loop_, clientsock);
+    newConnectioncd_(clientsock);
+}
+
+void Acceptor::setnewConnectioncb(std::function<void(Socket *)> fn)
+{
+    newConnectioncd_ = fn;
 }
