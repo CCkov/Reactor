@@ -1,19 +1,4 @@
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>          /* See NOTES */
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netinet/in.h>
-#include <sys/epoll.h>
-#include <arpa/inet.h>
-#include <strings.h>
-#include <string.h>
-#include "./include/InetAddress.h"
-#include "./include/Socket.h"
-#include "./include/Epoll.h"
-#include "./include/Eventloop.h"
-
-
+#include "./include/TcpServer.h"
 using namespace std;
 
 /*
@@ -28,14 +13,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    Socket servsock(createNoblocking());
-    InetAddress serveraddr(atoi(argv[1]));
-    servsock.setreuseaddr(true);
-    servsock.settcpnodelay(true);
-    servsock.setreuseport(true);
-    servsock.setkeepalive(true);
-    servsock.bind(serveraddr);
-    servsock.listen();
+    
 
     /* 
     1、SO_REUSEADDR:这个选项允许在本地地址已被使用的情况下重用这个地址。
@@ -53,15 +31,9 @@ int main(int argc, char const *argv[])
         此功能可以帮助在长时间没有数据传输的情况下检测到连接是否仍然有效，避免因为对端崩溃或网络故障导致的长时间无响应。
     */
     
-    Eventloop loop;
+    TcpServer tcpserver(atoi(argv[1]));
 
-    Channel* servChannel = new Channel(loop.ep(), servsock.fd());
-
-    servChannel->setreadcallback(std::bind(&Channel::newconnection, servChannel, &servsock));   // 设置绑定
-
-    servChannel->enablereading();
-    
-    loop.run(); 
+    tcpserver.start();
     
 
     return 0;

@@ -1,8 +1,8 @@
 #pragma once
 #include <sys/epoll.h>
 #include <functional>
-#include "../include/Epoll.h"
-#include "../include/Socket.h"
+#include "Epoll.h"
+#include "Socket.h"
 
 class Epoll;    // 前置声明Epoll类
 
