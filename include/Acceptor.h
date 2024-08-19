@@ -14,5 +14,7 @@ private:
 public:
     Acceptor(Eventloop* loop, uint16_t port);
     ~Acceptor();
+
+    void newConnection();
 };
 

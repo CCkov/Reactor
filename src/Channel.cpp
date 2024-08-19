@@ -2,8 +2,6 @@
 #include "../include/InetAddress.h"
 #include "../include/Socket.h"
 #include "../include/Eventloop.h"
-#include "../include/Connection.h"
-
 
 Channel::Channel(Eventloop* loop, int fd):loop_(loop), fd_(fd)
 {
@@ -87,15 +85,7 @@ void Channel::handleevent()
     }
 }
 
-void Channel::newconnection(Socket *servsock)
-{
-    InetAddress clientaddr;
-    Socket* clientsock = new Socket(servsock->accept(clientaddr));
-                 
-    printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
-    Connection* conn = new Connection(loop_, clientsock);
-}
 
 void Channel::onmessage()
 {
