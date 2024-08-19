@@ -54,7 +54,10 @@ int main(int argc, char const *argv[])
     
     Epoll ep;
     // ep.addfd(servsock.fd(), EPOLLIN);
-    Channel* servChannel = new Channel(&ep, servsock.fd(), true);
+    Channel* servChannel = new Channel(&ep, servsock.fd());
+
+    servChannel->setreadcallback(std::bind(&Channel::newconnection, servChannel, &servsock));   // 设置绑定
+
     servChannel->enablereading();
     
     while (true)
@@ -62,7 +65,7 @@ int main(int argc, char const *argv[])
         std::vector<Channel*> channels = ep.loop();
         for (auto &ch : channels)
         {
-            ch->handleevent(&servsock);
+            ch->handleevent();
         } 
     }  
     

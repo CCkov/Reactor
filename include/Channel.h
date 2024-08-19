@@ -1,5 +1,6 @@
 #pragma once
 #include <sys/epoll.h>
+#include <functional>
 #include "../include/Epoll.h"
 #include "../include/Socket.h"
 
@@ -14,10 +15,10 @@ private:
     uint32_t events_ = 0;   // fd_需要监视的事件, listenfd和clientfd需要监视EPOLLIN，clientfd可能还需要监视EPOLLOUT
     uint32_t revents_ = 0;  // fd_已发生的事件
 
-    bool islisten_ = false;  // listenf取值为true，客户端连上来的fd取值为false
+    std::function<void()> readcallback_;    // fd_读事件的回调函数
 
 public:
-    Channel(Epoll* ep, int fd, bool islisten);
+    Channel(Epoll* ep, int fd);
     ~Channel();
     int fd();
     void useet();   // 采用边缘触发
@@ -28,5 +29,9 @@ public:
     uint32_t events();
     uint32_t revents();
 
-    void handleevent(Socket* servsock); // 事件处理函数，epoll_wait()返回的时候，执行
+    void handleevent(); // 事件处理函数，epoll_wait()返回的时候，执行
+
+    void newconnection(Socket* servsock);   // 处理新客户端的连接请求
+    void onmessage();   // 处理对端发来的报文
+    void setreadcallback(std::function<void()> fn); // 设置fd_读事件的回调函数
 };
