@@ -11,6 +11,7 @@
 #include "./include/InetAddress.h"
 #include "./include/Socket.h"
 #include "./include/Epoll.h"
+#include "./include/Eventloop.h"
 
 
 using namespace std;
@@ -52,22 +53,15 @@ int main(int argc, char const *argv[])
         此功能可以帮助在长时间没有数据传输的情况下检测到连接是否仍然有效，避免因为对端崩溃或网络故障导致的长时间无响应。
     */
     
-    Epoll ep;
-    // ep.addfd(servsock.fd(), EPOLLIN);
-    Channel* servChannel = new Channel(&ep, servsock.fd());
+    Eventloop loop;
+
+    Channel* servChannel = new Channel(loop.ep(), servsock.fd());
 
     servChannel->setreadcallback(std::bind(&Channel::newconnection, servChannel, &servsock));   // 设置绑定
 
     servChannel->enablereading();
     
-    while (true)
-    {
-        std::vector<Channel*> channels = ep.loop();
-        for (auto &ch : channels)
-        {
-            ch->handleevent();
-        } 
-    }  
+    loop.run(); 
     
 
     return 0;
