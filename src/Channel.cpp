@@ -1,9 +1,11 @@
 #include "../include/Channel.h"
 #include "../include/InetAddress.h"
 #include "../include/Socket.h"
+#include "../include/Eventloop.h"
+#include "../include/Connection.h"
 
 
-Channel::Channel(Epoll *ep, int fd):ep_(ep), fd_(fd)
+Channel::Channel(Eventloop* loop, int fd):loop_(loop), fd_(fd)
 {
 
 }
@@ -28,7 +30,7 @@ void Channel::enablereading()
     events_ = events_|EPOLLIN;
     // events_ |= EPOLLIN;
 
-    ep_->updatechannel(this);
+    loop_->ep()->updatechannel(this);
 }
 
 void Channel::setinepoll()
@@ -92,12 +94,7 @@ void Channel::newconnection(Socket *servsock)
                  
     printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
-    Channel* clientChannel = new Channel(ep_, clientsock->fd());
-
-    clientChannel->setreadcallback(std::bind(&Channel::onmessage, clientChannel));  // 设置绑定
-
-    clientChannel->useet();
-    clientChannel->enablereading();
+    Connection* conn = new Connection(loop_, clientsock);
 }
 
 void Channel::onmessage()

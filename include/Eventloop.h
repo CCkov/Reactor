@@ -1,6 +1,8 @@
 #pragma once
 #include "Epoll.h"
 
+class Epoll;
+
 class Eventloop
 {
 private:

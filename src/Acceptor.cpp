@@ -12,7 +12,7 @@ Acceptor::Acceptor(Eventloop *loop, uint16_t port)
     servsock_->bind(serveraddr);
     servsock_->listen();
 
-    acceptChannel_ = new Channel(loop_->ep(), servsock_->fd());
+    acceptChannel_ = new Channel(loop_, servsock_->fd());
     acceptChannel_->setreadcallback(std::bind(&Channel::newconnection, acceptChannel_, servsock_));   // 设置绑定
     acceptChannel_->enablereading();
 }
