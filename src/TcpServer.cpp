@@ -2,22 +2,12 @@
 
 TcpServer::TcpServer(const uint16_t port)
 {
-    Socket* servsock = new Socket(createNoblocking());
-    InetAddress serveraddr(port);
-    servsock->setreuseaddr(true);
-    servsock->settcpnodelay(true);
-    servsock->setreuseport(true);
-    servsock->setkeepalive(true);
-    servsock->bind(serveraddr);
-    servsock->listen();
-
-    Channel* servChannel = new Channel(loop_.ep(), servsock->fd());
-    servChannel->setreadcallback(std::bind(&Channel::newconnection, servChannel, servsock));   // 设置绑定
-    servChannel->enablereading();
+    accrptor_ = new Acceptor(&loop_, port);
 }
 
 TcpServer::~TcpServer()
 {
+    delete accrptor_;
 }
 
 void TcpServer::start()
