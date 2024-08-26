@@ -60,8 +60,8 @@ void Channel::handleevent()
 {
     if (revents_ & EPOLLRDHUP)
     {
-        printf("1客户端(eventfd=%d) 断开连接.\n", fd_);
-        close(fd_);
+        
+        closecallback_();
     }
     else if (revents_ & (EPOLLIN | EPOLLPRI))
     {
@@ -80,8 +80,8 @@ void Channel::handleevent()
         /* code */
     }
     else{
-        printf("3客户端(eventfd=%d) 发生错误.\n", fd_);
-        close(fd_);
+
+        errorcallback_();
     }
 }
 
@@ -111,8 +111,8 @@ void Channel::onmessage()
         }
         else if (nread == 0)
         {
-            printf("2客户端(eventfd=%d) 断开连接.\n", fd_);
-            close(fd_);
+            
+            closecallback_();
             break;
         }   
     }
@@ -121,4 +121,14 @@ void Channel::onmessage()
 void Channel::setreadcallback(std::function<void()> fn)
 {
     readcallback_ = fn;
+}
+
+void Channel::setclosecallback(std::function<void()> fn)
+{
+    closecallback_ = fn;
+}
+
+void Channel::seterrorcallback(std::function<void()> fn)
+{
+    errorcallback_ = fn;
 }

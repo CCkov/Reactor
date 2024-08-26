@@ -18,5 +18,8 @@ public:
     int fd() const;
     std::string ip() const;
     uint16_t port() const;
+
+    void closecallback();
+    void errorcallback();
 };
 

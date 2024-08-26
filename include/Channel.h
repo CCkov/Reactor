@@ -18,6 +18,9 @@ private:
 
     std::function<void()> readcallback_;    // fd_读事件的回调函数
 
+    std::function<void()> closecallback_;
+    std::function<void()> errorcallback_;
+
 public:
     Channel(Eventloop* loop, int fd);
     ~Channel();
@@ -34,4 +37,7 @@ public:
 
     void onmessage();   // 处理对端发来的报文
     void setreadcallback(std::function<void()> fn); // 设置fd_读事件的回调函数
+
+    void setclosecallback(std::function<void()> fn);
+    void seterrorcallback(std::function<void()> fn);
 };
