@@ -36,12 +36,20 @@ uint16_t Connection::port() const
 
 void Connection::closecallback()
 {
-    printf("1客户端(eventfd=%d) 断开连接.\n", fd());
-    close(fd());
+    closecallback_(this);
 }
 
 void Connection::errorcallback()
 {
-    printf("3客户端(eventfd=%d) 发生错误.\n", fd());
-    close(fd());
+    errorcallback_(this);
+}
+
+void Connection::seterrorcallback(std::function<void(Connection *)> fn)
+{
+    closecallback_ = fn;
+}
+
+void Connection::setclosecallback(std::function<void(Connection *)> fn)
+{
+    errorcallback_ = fn;
 }
