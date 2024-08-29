@@ -86,38 +86,6 @@ void Channel::handleevent()
 }
 
 
-
-void Channel::onmessage()
-{
-    char buff[1024];
-    // string buff;
-    while (true)
-    {
-        bzero(&buff, sizeof(buff));
-        ssize_t nread = read(fd_, buff, sizeof(buff));
-
-        if (nread > 0)
-        {
-            printf("recv(eventfd = %d)::%s\n", fd_, buff);
-            send(fd_, buff, strlen(buff), 0);
-        }
-        else if ((nread == -1) && (errno == EINTR))
-        {
-            continue;
-        }
-        else if ((nread == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
-        {
-            break;
-        }
-        else if (nread == 0)
-        {
-            
-            closecallback_();
-            break;
-        }   
-    }
-}
-
 void Channel::setreadcallback(std::function<void()> fn)
 {
     readcallback_ = fn;

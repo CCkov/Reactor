@@ -5,7 +5,7 @@ Connection::Connection(Eventloop *loop, Socket *clientsock)
 {
     clientChannel_ = new Channel(loop_, clientsock_->fd());
 
-    clientChannel_->setreadcallback(std::bind(&Channel::onmessage, clientChannel_));  // 设置绑定
+    clientChannel_->setreadcallback(std::bind(&Connection::onmessage, this));  // 设置绑定
     clientChannel_->setclosecallback(std::bind(&Connection::closecallback, this));
     clientChannel_->seterrorcallback(std::bind(&Connection::errorcallback, this));
 
@@ -42,6 +42,42 @@ void Connection::closecallback()
 void Connection::errorcallback()
 {
     errorcallback_(this);
+}
+
+void Connection::onmessage()
+{
+    char buff[1024];
+    // string buff;
+    while (true)
+    {
+        bzero(&buff, sizeof(buff));
+        ssize_t nread = read(fd(), buff, sizeof(buff));
+
+        if (nread > 0)
+        {
+            // printf("recv(eventfd = %d)::%s\n", fd(), buff);
+            // send(fd(), buff, strlen(buff), 0);
+            inputbuffer_.append(buff, nread);
+        }
+        else if ((nread == -1) && (errno == EINTR))
+        {
+            continue;
+        }
+        else if ((nread == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
+        {
+            printf("recv(eventfd = %d)::%s\n", fd(), inputbuffer_.data());
+            outputbuffer_ = inputbuffer_;
+            inputbuffer_.clear();
+            send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
+            break;
+        }
+        else if (nread == 0)
+        {
+            
+            closecallback();
+            break;
+        }   
+    }
 }
 
 void Connection::seterrorcallback(std::function<void(Connection *)> fn)

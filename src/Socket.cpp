@@ -31,6 +31,12 @@ uint16_t Socket::port() const
 return port_;
 }
 
+void Socket::setipport(const std::string& ip, uint16_t port)
+{
+    ip_ = ip;
+    port_ = port;
+}
+
 void Socket::setreuseaddr(bool on)
 {
     int optval = on?1:0;
@@ -63,8 +69,7 @@ void Socket::bind(const InetAddress &serveraddr)
         close(fd_);
         exit(-1);
     }
-
-    port_ = serveraddr.port();
+    setipport(serveraddr.ip(), serveraddr.port());
 }
 
 int Socket::accept(InetAddress &clientaddr)
@@ -81,8 +86,10 @@ int Socket::accept(InetAddress &clientaddr)
         exit(-1);
     }
 
-    ip_ = clientaddr.ip();
-    port_ = clientaddr.port();
+    // ip_ = clientaddr.ip();
+    // port_ = clientaddr.port();
+
+
 
     return clientfd;
 }

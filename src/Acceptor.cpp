@@ -29,7 +29,7 @@ void Acceptor::newConnection()
     Socket* clientsock = new Socket(servsock_->accept(clientaddr));
                  
     // printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
-
+    clientsock->setipport(clientaddr.ip(), clientaddr.port());
     newConnectioncd_(clientsock);
 }
 
