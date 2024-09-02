@@ -65,10 +65,18 @@ void Connection::onmessage()
         }
         else if ((nread == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
         {
-            printf("recv(eventfd = %d)::%s\n", fd(), inputbuffer_.data());
-            outputbuffer_ = inputbuffer_;
-            inputbuffer_.clear();
-            send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
+            while (true)
+            {
+                int len;
+                memcpy(&len, inputbuffer_.data(), 4);
+                if (inputbuffer_.size() < len+4) break;
+                std::string message(inputbuffer_.data()+4, len);
+                inputbuffer_.erase(0, len+4);
+
+                printf("message(eventfd = %d)::%s\n", fd(), message.data());
+                onmessagecallback_(this, message);
+                
+            }
             break;
         }
         else if (nread == 0)
@@ -83,6 +91,11 @@ void Connection::onmessage()
 void Connection::seterrorcallback(std::function<void(Connection *)> fn)
 {
     closecallback_ = fn;
+}
+
+void Connection::setonmessagecallback(std::function<void(Connection *, std::string)> fn)
+{
+    onmessagecallback_ = fn;
 }
 
 void Connection::setclosecallback(std::function<void(Connection *)> fn)

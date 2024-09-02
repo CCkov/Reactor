@@ -30,7 +30,7 @@ void TcpServer::newConnection(Socket* clientsock)
 
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
-
+    conn->setonmessagecallback(std::bind(&TcpServer::onmessage, this, std::placeholders::_1, std::placeholders::_2));
     printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", conn->fd(), conn->ip().c_str(), conn->port());
 
     conns_[conn->fd()] = conn;  // 把conn存放到map容器中
@@ -51,4 +51,14 @@ void TcpServer::errorconnection(Connection *conn)
     // close(conn->fd());
     conns_.erase(conn->fd());
     delete conn;
+}
+
+void TcpServer::onmessage(Connection *conn, std::string message)
+{
+    int len;
+    message = "reply:" + message;
+    len = message.size();
+    std::string tmpbuf((char*)&len, 4);
+    tmpbuf.append(message);
+    send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
 }

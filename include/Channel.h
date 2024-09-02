@@ -26,7 +26,7 @@ public:
     ~Channel();
     int fd();
     void useet();   // 采用边缘触发
-    void enablereading();   // 让epoll_wait()监视fd_的读事件
+    void enablereading();   // 让epoll_wait()监视fd_的读事件,注册读事件
     void setinepoll();  // 把inepoll_成员的值设置为true
     void setrevents(uint32_t ev);   // 设置revents_成员的参数为ev
     bool inpoll();  // 返回inepoll_成员

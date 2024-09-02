@@ -14,6 +14,7 @@ public:
     size_t size();
     const char* data(); // 返回buf首地址
     void clear();
+    void erase(size_t pos, size_t i);
 };
 
 

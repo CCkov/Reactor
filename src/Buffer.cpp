@@ -25,6 +25,12 @@ void Buffer::clear()
     buf_.clear();
 }
 
+// 从buf_的pos开始，删除i个字节，pos从0开始
+void Buffer::erase(size_t pos, size_t i)
+{
+    buf_.erase(pos, i);
+}
+
 const char *Buffer::data()
 {
     return buf_.data();
