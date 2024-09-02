@@ -95,7 +95,11 @@ void Connection::writecallback()
     if (writen > 0) outputbuffer_.erase(0, writen);
     
     // 如果发送缓冲区没有数据了, 表示数据已发送成功，不在关注写事件
-    if (outputbuffer_.size() == 0) clientChannel_->diablewriting();
+    if (outputbuffer_.size() == 0)
+    {
+        clientChannel_->diablewriting();
+        sendcomplatecallback_(this);
+    }
 
 }
 
@@ -107,6 +111,11 @@ void Connection::seterrorcallback(std::function<void(Connection *)> fn)
 void Connection::setonmessagecallback(std::function<void(Connection *, std::string)> fn)
 {
     onmessagecallback_ = fn;
+}
+
+void Connection::setsendcomplatecallback(std::function<void(Connection *)> fn)
+{
+    sendcomplatecallback_ = fn;
 }
 
 void Connection::send(const char *data, size_t size)

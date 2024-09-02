@@ -19,6 +19,7 @@ private:
     std::function<void(Connection*)> closecallback_;
     std::function<void(Connection*)> errorcallback_; 
     std::function<void(Connection*, std::string)> onmessagecallback_; 
+    std::function<void(Connection*)> sendcomplatecallback_; // 处理报文的回调函数，将回调TcpServer::onmessage()
     
 public:
     Connection(Eventloop* loop, Socket* clientsock);
@@ -36,7 +37,7 @@ public:
     void setclosecallback(std::function<void(Connection*)> fn);
     void seterrorcallback(std::function<void(Connection*)> fn);
     void setonmessagecallback(std::function<void(Connection*, std::string)> fn);
-    
+    void setsendcomplatecallback(std::function<void(Connection*)> fn);
 
     void send(const char* data, size_t size);
 };

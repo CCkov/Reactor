@@ -95,7 +95,6 @@ void Channel::handleevent()
     }
     else if (revents_ & EPOLLOUT)   // 发送缓冲区有数据要发
     {
-       printf("revents_ & EPOLLOUT\n");
        writecallback_();
     }
     else{   // 其他事件视为错误

@@ -22,7 +22,8 @@ public:
 
     void closeconnection(Connection* conn); // 关闭客户端连接，在Connection类中回调此函数
     void errorconnection(Connection* conn); // 客户端的连接错误，在Connection类中回调此函数
-
     void onmessage(Connection* conn, std::string message);    // 处理客户端的请求报文，在Connection类中回调此函数
+    void sendcomplate(Connection* conn);    // 数据发送完成后，在Connection类中调用此函数
+    void epolltimeout(Eventloop* loop);     // epoll_wait()超时，在eventloop类中回调
 };
 

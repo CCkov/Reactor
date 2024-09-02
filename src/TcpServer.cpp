@@ -5,6 +5,7 @@ TcpServer::TcpServer(const uint16_t port)
 {
     accrptor_ = new Acceptor(&loop_, port);
     accrptor_->setnewConnectioncb(std::bind(&TcpServer::newConnection, this, std::placeholders::_1));
+    loop_.setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
 }
 
 TcpServer::~TcpServer()
@@ -31,6 +32,8 @@ void TcpServer::newConnection(Socket* clientsock)
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
     conn->setonmessagecallback(std::bind(&TcpServer::onmessage, this, std::placeholders::_1, std::placeholders::_2));
+    conn->setsendcomplatecallback(std::bind(&TcpServer::sendcomplate, this, std::placeholders::_1));
+    
     printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", conn->fd(), conn->ip().c_str(), conn->port());
 
     conns_[conn->fd()] = conn;  // 把conn存放到map容器中
@@ -63,4 +66,14 @@ void TcpServer::onmessage(Connection *conn, std::string message)
     // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
 
     conn->send(tmpbuf.data(), tmpbuf.size()); // 把临时缓冲区中的数据直接send 出去
+}
+
+void TcpServer::sendcomplate(Connection *conn)
+{
+    printf("Send complate\n");
+}
+
+void TcpServer::epolltimeout(Eventloop *loop)
+{
+    printf("epoll_wait() timeout\n");
 }
