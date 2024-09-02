@@ -31,6 +31,24 @@ void Channel::enablereading()
     loop_->ep()->updatechannel(this);
 }
 
+void Channel::disablereading()
+{
+    events_ &= ~EPOLLIN;
+    loop_->ep()->updatechannel(this);
+}
+
+void Channel::enablewriting()
+{
+    events_ |= EPOLLOUT;
+    loop_->ep()->updatechannel(this);
+}
+
+void Channel::diablewriting()
+{
+    events_ &= ~EPOLLOUT;
+    loop_->ep()->updatechannel(this);
+}
+
 void Channel::setinepoll()
 {
     inepoll_ = true;
@@ -58,12 +76,12 @@ uint32_t Channel::revents()
 
 void Channel::handleevent()
 {
-    if (revents_ & EPOLLRDHUP)
+    if (revents_ & EPOLLRDHUP)  // 对方已关闭，
     {
         
         closecallback_();
     }
-    else if (revents_ & (EPOLLIN | EPOLLPRI))
+    else if (revents_ & (EPOLLIN | EPOLLPRI))   // 接受缓冲区中有数据可以读
     {
         // if (islisten_ == true)
         // {
@@ -75,11 +93,12 @@ void Channel::handleevent()
         // }
         readcallback_();
     }
-    else if (revents_ & EPOLLOUT)
+    else if (revents_ & EPOLLOUT)   // 发送缓冲区有数据要发
     {
-        /* code */
+       printf("revents_ & EPOLLOUT\n");
+       writecallback_();
     }
-    else{
+    else{   // 其他事件视为错误
 
         errorcallback_();
     }
@@ -99,4 +118,9 @@ void Channel::setclosecallback(std::function<void()> fn)
 void Channel::seterrorcallback(std::function<void()> fn)
 {
     errorcallback_ = fn;
+}
+
+void Channel::setwritecallback(std::function<void()> fn)
+{
+    writecallback_ = fn;
 }

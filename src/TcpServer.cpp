@@ -60,5 +60,7 @@ void TcpServer::onmessage(Connection *conn, std::string message)
     len = message.size();
     std::string tmpbuf((char*)&len, 4);
     tmpbuf.append(message);
-    send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
+    // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
+
+    conn->send(tmpbuf.data(), tmpbuf.size()); // 把临时缓冲区中的数据直接send 出去
 }

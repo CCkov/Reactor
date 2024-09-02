@@ -20,6 +20,7 @@ private:
 
     std::function<void()> closecallback_;
     std::function<void()> errorcallback_;
+    std::function<void()> writecallback_;
 
 public:
     Channel(Eventloop* loop, int fd);
@@ -27,6 +28,9 @@ public:
     int fd();
     void useet();   // 采用边缘触发
     void enablereading();   // 让epoll_wait()监视fd_的读事件,注册读事件
+    void disablereading();  // 取消读事件
+    void enablewriting();   // 注册写事件
+    void diablewriting();   // 取消写事件   
     void setinepoll();  // 把inepoll_成员的值设置为true
     void setrevents(uint32_t ev);   // 设置revents_成员的参数为ev
     bool inpoll();  // 返回inepoll_成员
@@ -40,4 +44,6 @@ public:
 
     void setclosecallback(std::function<void()> fn);
     void seterrorcallback(std::function<void()> fn);
+    void setwritecallback(std::function<void()> fn);
 };
+
