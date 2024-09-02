@@ -1,4 +1,4 @@
-#include "./include/TcpServer.h"
+#include "./include/EchoServer.h"
 using namespace std;
 
 /*
@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
         此功能可以帮助在长时间没有数据传输的情况下检测到连接是否仍然有效，避免因为对端崩溃或网络故障导致的长时间无响应。
     */
     
-    TcpServer tcpserver(atoi(argv[1]));
+    EchoServer tcpserver(atoi(argv[1]));
 
     tcpserver.start();
     

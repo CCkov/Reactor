@@ -38,10 +38,13 @@ void TcpServer::newConnection(Socket* clientsock)
 
     conns_[conn->fd()] = conn;  // 把conn存放到map容器中
 
+    newconnectioncallback_(conn);   // 回调EchoServer::HandleNewConnection()
+
 }
 
 void TcpServer::closeconnection(Connection *conn)
 {
+    closeconnectioncallback_(conn); // 回调EchoServer::
     printf("1客户端(eventfd=%d) 断开连接.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
@@ -50,6 +53,7 @@ void TcpServer::closeconnection(Connection *conn)
 
 void TcpServer::errorconnection(Connection *conn)
 {
+    errorconnectioncallback_(conn);
     printf("3客户端(eventfd=%d) 发生错误.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
@@ -58,22 +62,47 @@ void TcpServer::errorconnection(Connection *conn)
 
 void TcpServer::onmessage(Connection *conn, std::string message)
 {
-    int len;
-    message = "reply:" + message;
-    len = message.size();
-    std::string tmpbuf((char*)&len, 4);
-    tmpbuf.append(message);
-    // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
-
-    conn->send(tmpbuf.data(), tmpbuf.size()); // 把临时缓冲区中的数据直接send 出去
+    onmessagecallback_(conn, message);
 }
 
 void TcpServer::sendcomplate(Connection *conn)
 {
-    printf("Send complate\n");
+    // printf("Send complate\n");
+    sendcomplatecallback_(conn);
 }
 
 void TcpServer::epolltimeout(Eventloop *loop)
 {
-    printf("epoll_wait() timeout\n");
+    // printf("epoll_wait() timeout\n");
+    timeoutcallback_(loop);
+}
+
+void TcpServer::setnewconnectioncallback(std::function<void(Connection *)> fn)
+{
+    newconnectioncallback_ = fn;
+}
+
+void TcpServer::settimeoutcallback(std::function<void(Eventloop*)> fn)
+{
+    timeoutcallback_ = fn;
+}
+
+void TcpServer::setsendcomplatecallback(std::function<void(Connection *)> fn)
+{
+    sendcomplatecallback_ = fn;
+}
+
+void TcpServer::setonmessagecallback(std::function<void(Connection *, std::string &message)> fn)
+{
+    onmessagecallback_ = fn;
+}
+
+void TcpServer::seterrorconnectioncallback(std::function<void(Connection *)> fn)
+{
+    errorconnectioncallback_ = fn;
+}
+
+void TcpServer::setcloseconnectioncallback(std::function<void(Connection *)> fn)
+{
+    closeconnectioncallback_ = fn;
 }
