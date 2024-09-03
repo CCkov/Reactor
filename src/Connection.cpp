@@ -108,7 +108,7 @@ void Connection::seterrorcallback(std::function<void(Connection *)> fn)
     closecallback_ = fn;
 }
 
-void Connection::setonmessagecallback(std::function<void(Connection *, std::string)> fn)
+void Connection::setonmessagecallback(std::function<void(Connection *, std::string&)> fn)
 {
     onmessagecallback_ = fn;
 }
@@ -120,7 +120,7 @@ void Connection::setsendcomplatecallback(std::function<void(Connection *)> fn)
 
 void Connection::send(const char *data, size_t size)
 {
-    outputbuffer_.append(data, size);
+    outputbuffer_.appendwithhead(data, size);
     clientChannel_->enablewriting();// 注册写事件
 
 }

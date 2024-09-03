@@ -40,16 +40,13 @@ void EchoServer::HandleTimeout(Eventloop *loop)
     std::cout << "EchoServer timeout." << std::endl;
 }
 
-void EchoServer::HandleMessage(Connection *conn, std::string message)
+void EchoServer::HandleMessage(Connection *conn, std::string& message)
 {
-    int len;
     message = "reply:" + message;
-    len = message.size();
-    std::string tmpbuf((char*)&len, 4);
-    tmpbuf.append(message);
+    
     // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
 
-    conn->send(tmpbuf.data(), tmpbuf.size()); // 把临时缓冲区中的数据直接send 出去
+    conn->send(message.data(), message.size()); // 把临时缓冲区中的数据直接send 出去
 }
 
 void EchoServer::HandleError(Connection *conn)
