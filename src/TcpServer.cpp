@@ -1,16 +1,30 @@
 #include "../include/TcpServer.h"
 #include "../include/Connection.h"
 
-TcpServer::TcpServer(const uint16_t port)
+TcpServer::TcpServer(const uint16_t port, int threadnum)
+    :threadnum_(threadnum)
 {
-    accrptor_ = new Acceptor(&loop_, port);
+    mainloop_ = new Eventloop;
+    mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
+
+    accrptor_ = new Acceptor(mainloop_, port);
     accrptor_->setnewConnectioncb(std::bind(&TcpServer::newConnection, this, std::placeholders::_1));
-    loop_.setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
+
+    // 创建从事件循环
+    threadpool_ = new ThreadPool(threadnum_);
+    for (int i = 0; i < threadnum_; i++)
+    {
+        subloops_.push_back(new Eventloop); // 创建事件循环，存入subloops_容器中
+        subloops_[i]->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
+        threadpool_->addtask(std::bind(&Eventloop::run, subloops_[i])); // 在线程池中运行事件循环
+    }
+    
 }
 
 TcpServer::~TcpServer()
 {
     delete accrptor_;
+    delete mainloop_;
     
     // 释放全部Connection对象
     for (auto &i : conns_)
@@ -18,16 +32,22 @@ TcpServer::~TcpServer()
         delete i.second;
     }
     
+    for (auto &i : subloops_)
+    {
+        delete i;
+    }
+    delete threadpool_;
 }
 
 void TcpServer::start()
 {
-    loop_.run();
+    mainloop_->run();
 }
 
 void TcpServer::newConnection(Socket* clientsock)
 {
-    Connection* conn = new Connection(&loop_, clientsock);
+    // Connection* conn = new Connection(mainloop_, clientsock);
+    Connection* conn = new Connection(subloops_[clientsock->fd() % threadnum_], clientsock);
 
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));

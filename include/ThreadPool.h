@@ -7,6 +7,9 @@
 #include <queue>
 #include <atomic>
 #include <condition_variable>
+#include <mutex>
+#include <unistd.h>
+#include <sys/syscall.h> 
 
 class ThreadPool
 {

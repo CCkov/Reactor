@@ -2,6 +2,8 @@
 #include "Epoll.h"
 #include "Channel.h"
 #include <functional>
+#include <unistd.h>
+#include <sys/syscall.h>
 
 class Epoll;
 class Channel;

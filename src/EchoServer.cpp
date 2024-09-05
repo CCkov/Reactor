@@ -1,7 +1,7 @@
 #include "../include/EchoServer.h"
 
-EchoServer::EchoServer(const uint16_t port)
-    :tcpserver_(port)
+EchoServer::EchoServer(const uint16_t port, int threadnum)
+    :tcpserver_(port, threadnum)
 {
     tcpserver_.setnewconnectioncallback(std::bind(&EchoServer::HandleNewConnection, this, std::placeholders::_1));
     tcpserver_.setcloseconnectioncallback(std::bind(&EchoServer::HandleClose, this, std::placeholders::_1));
@@ -23,6 +23,8 @@ void EchoServer::start()
 void EchoServer::HandleNewConnection(Connection *conn)
 {
     std::cout << "New Connection Come in." << std::endl;
+    
+    printf("EchoServer::HandleNewConnection() thread is %ld\n", syscall(SYS_gettid));
 }
 
 void EchoServer::HandleClose(Connection *conn)
@@ -42,6 +44,8 @@ void EchoServer::HandleTimeout(Eventloop *loop)
 
 void EchoServer::HandleMessage(Connection *conn, std::string& message)
 {
+    printf("EchoServer::HandleMessage() thread is %ld\n", syscall(SYS_gettid));
+    
     message = "reply:" + message;
     
     // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);

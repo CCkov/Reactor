@@ -4,14 +4,19 @@
 #include "Channel.h"
 #include "Acceptor.h"
 #include "Connection.h"
+#include "ThreadPool.h"
 #include <map>
 #include <functional>
+#include <vector>
 
 class TcpServer
 {
 private:
-    Eventloop loop_; //
-    Acceptor* accrptor_;
+    Eventloop* mainloop_; // 主事件循环
+    std::vector<Eventloop*> subloops_;  // 存放从事件循环的容器
+    Acceptor* accrptor_;    // 一个TcpServer只用一个Acceptor对象
+    ThreadPool* threadpool_;    // 线程池
+    int threadnum_;
     std::map<int, Connection*> conns_;  // 一个TcpServer中有多个Connection对象，存放在map容器中
 
     std::function<void(Connection*)> newconnectioncallback_;
@@ -21,7 +26,7 @@ private:
     std::function<void(Connection*)> sendcomplatecallback_;
     std::function<void(Eventloop*)> timeoutcallback_;
 public:
-    TcpServer(const uint16_t port);
+    TcpServer(const uint16_t port, int threadnum = 3);
     ~TcpServer();
     
     void start();
