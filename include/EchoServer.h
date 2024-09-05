@@ -10,8 +10,9 @@ class EchoServer
 {
 private:
     TcpServer tcpserver_;
+    ThreadPool threadpool_; // 工作线程池
 public:
-    EchoServer(const uint16_t port, int threadnum = 3);
+    EchoServer(const uint16_t port, int subthreadnum = 3, int workthreadnum = 5);
     ~EchoServer();
 
     void start();   // 启动服务
@@ -23,4 +24,6 @@ public:
     void HandleMessage(Connection* conn, std::string& message);    // 处理客户端的请求报文，在Connection类中回调此函数
     void HandleSendComplate(Connection* conn);    // 数据发送完成后，在Connection类中调用此函数
     void HandleTimeout(Eventloop* loop);     // epoll_wait()超时，在eventloop类中回调
+
+    void OnMessage(Connection* conn, std::string& message); // 处理客户端的请求报文，添加到线程池中
 };

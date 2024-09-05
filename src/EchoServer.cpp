@@ -1,7 +1,7 @@
 #include "../include/EchoServer.h"
 
-EchoServer::EchoServer(const uint16_t port, int threadnum)
-    :tcpserver_(port, threadnum)
+EchoServer::EchoServer(const uint16_t port, int subthreadnum, int workthreadnum)
+    :tcpserver_(port, subthreadnum),threadpool_(workthreadnum, "WORKS")
 {
     tcpserver_.setnewconnectioncallback(std::bind(&EchoServer::HandleNewConnection, this, std::placeholders::_1));
     tcpserver_.setcloseconnectioncallback(std::bind(&EchoServer::HandleClose, this, std::placeholders::_1));
@@ -24,7 +24,7 @@ void EchoServer::HandleNewConnection(Connection *conn)
 {
     std::cout << "New Connection Come in." << std::endl;
     
-    printf("EchoServer::HandleNewConnection() thread is %ld\n", syscall(SYS_gettid));
+    // printf("EchoServer::HandleNewConnection() thread is %ld\n", syscall(SYS_gettid));
 }
 
 void EchoServer::HandleClose(Connection *conn)
@@ -42,14 +42,18 @@ void EchoServer::HandleTimeout(Eventloop *loop)
     std::cout << "EchoServer timeout." << std::endl;
 }
 
-void EchoServer::HandleMessage(Connection *conn, std::string& message)
+void EchoServer::HandleMessage(Connection *conn, std::string &message)
 {
-    printf("EchoServer::HandleMessage() thread is %ld\n", syscall(SYS_gettid));
-    
-    message = "reply:" + message;
-    
-    // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
+    // printf("EchoServer::HandleMessage() thread is %ld\n", syscall(SYS_gettid));
 
+    // 把任务添加到线程池的任务队列中
+    threadpool_.addtask(std::bind(&EchoServer::OnMessage, this, conn, message));
+}
+
+void EchoServer::OnMessage(Connection *conn, std::string &message)
+{
+    message = "reply:" + message;
+    // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
     conn->send(message.data(), message.size()); // 把临时缓冲区中的数据直接send 出去
 }
 

@@ -11,7 +11,7 @@ TcpServer::TcpServer(const uint16_t port, int threadnum)
     accrptor_->setnewConnectioncb(std::bind(&TcpServer::newConnection, this, std::placeholders::_1));
 
     // 创建从事件循环
-    threadpool_ = new ThreadPool(threadnum_);
+    threadpool_ = new ThreadPool(threadnum_, "IO");
     for (int i = 0; i < threadnum_; i++)
     {
         subloops_.push_back(new Eventloop); // 创建事件循环，存入subloops_容器中
