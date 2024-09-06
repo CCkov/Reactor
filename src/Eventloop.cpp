@@ -6,7 +6,7 @@ Eventloop::Eventloop():ep_(new Epoll)
 
 Eventloop::~Eventloop()
 {
-    delete ep_;
+    // delete ep_;
 }
 
 void Eventloop::run()
@@ -31,10 +31,10 @@ void Eventloop::run()
     } 
 }
 
-Epoll *Eventloop::ep()
-{
-    return ep_;
-}
+// Epoll *Eventloop::ep()
+// {
+//     return ep_;
+// }
 
 void Eventloop::updatechannel(Channel *ch)
 {

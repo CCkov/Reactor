@@ -1,7 +1,7 @@
 #include "../include/Acceptor.h"
 #include "../include/Connection.h"
 
-Acceptor::Acceptor(Eventloop *loop, uint16_t port)
+Acceptor::Acceptor(const std::unique_ptr<Eventloop>& loop, uint16_t port)
     :loop_(loop)
 {
     servsock_ = new Socket(createNoblocking());
@@ -26,14 +26,14 @@ Acceptor::~Acceptor()
 void Acceptor::newConnection()
 {
     InetAddress clientaddr;
-    Socket* clientsock = new Socket(servsock_->accept(clientaddr));
+    std::unique_ptr<Socket> clientsock(new Socket(servsock_->accept(clientaddr)));
                  
     // printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
     clientsock->setipport(clientaddr.ip(), clientaddr.port());
-    newConnectioncd_(clientsock);
+    newConnectioncd_(std::move(clientsock));    // 回调TcpServer::newConnection()
 }
 
-void Acceptor::setnewConnectioncb(std::function<void(Socket *)> fn)
+void Acceptor::setnewConnectioncb(std::function<void(std::unique_ptr<Socket>)> fn)
 {
     newConnectioncd_ = fn;
 }

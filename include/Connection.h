@@ -14,9 +14,14 @@ using spConnection = std::shared_ptr<Connection>;
 class Connection:public std::enable_shared_from_this<Connection>
 {
 private:
-    Socket* clientsock_;
-    Eventloop* loop_;   // Connection对应的事件循环，在构造函数中传入
-    Channel* clientChannel_;    // 与Connection对应的Channel，在构造函数中创建
+    // Socket* clientsock_;    // 虽然是在类外传入，但其生命周期有Connection管理
+    std::unique_ptr<Socket> clientsock_;
+
+    // Eventloop* loop_;   // Connection对应的事件循环，在构造函数中传入
+    const std::unique_ptr<Eventloop>& loop_;
+    
+    // Channel* clientChannel_;    // 与Connection对应的Channel，在构造函数中创建
+    std::unique_ptr<Channel> clientChannel_;
 
     Buffer inputbuffer_;
     Buffer outputbuffer_;
@@ -29,7 +34,7 @@ private:
     std::function<void(spConnection)> sendcomplatecallback_; // 处理报文的回调函数，将回调TcpServer::onmessage()
     
 public:
-    Connection(Eventloop* loop, Socket* clientsock);
+    Connection(const std::unique_ptr<Eventloop>& loop, std::unique_ptr<Socket> clientsock);
     ~Connection();
 
     int fd() const;

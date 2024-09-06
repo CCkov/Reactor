@@ -2,9 +2,8 @@
 #include "../include/Connection.h"
 
 TcpServer::TcpServer(const uint16_t port, int threadnum)
-    :threadnum_(threadnum)
+    :threadnum_(threadnum), mainloop_(new Eventloop)
 {
-    mainloop_ = new Eventloop;
     mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
 
     accrptor_ = new Acceptor(mainloop_, port);
@@ -14,9 +13,9 @@ TcpServer::TcpServer(const uint16_t port, int threadnum)
     threadpool_ = new ThreadPool(threadnum_, "IO");
     for (int i = 0; i < threadnum_; i++)
     {
-        subloops_.push_back(new Eventloop); // 创建事件循环，存入subloops_容器中
+        subloops_.emplace_back(new Eventloop); // 创建事件循环，存入subloops_容器中
         subloops_[i]->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
-        threadpool_->addtask(std::bind(&Eventloop::run, subloops_[i])); // 在线程池中运行事件循环
+        threadpool_->addtask(std::bind(&Eventloop::run, subloops_[i].get())); // 在线程池中运行事件循环
     }
     
 }
@@ -24,7 +23,7 @@ TcpServer::TcpServer(const uint16_t port, int threadnum)
 TcpServer::~TcpServer()
 {
     delete accrptor_;
-    delete mainloop_;
+    // delete mainloop_;
     
     // 释放全部Connection对象
     // for (auto &i : conns_)
@@ -32,11 +31,12 @@ TcpServer::~TcpServer()
     //     delete i.second;
     // }
     
-    for (auto &i : subloops_)
-    {
-        delete i;
-    }
-    delete threadpool_;
+    // for (auto &i : subloops_)
+    // {
+    //     delete i;
+    // }
+
+    delete threadpool_; // 释放资源池
 }
 
 void TcpServer::start()
@@ -44,10 +44,10 @@ void TcpServer::start()
     mainloop_->run();
 }
 
-void TcpServer::newConnection(Socket* clientsock)
+void TcpServer::newConnection(std::unique_ptr<Socket> clientsock)
 {
     // Connection* conn = new Connection(mainloop_, clientsock);
-    spConnection conn(new Connection(subloops_[clientsock->fd() % threadnum_], clientsock));
+    spConnection conn(new Connection(subloops_[clientsock->fd() % threadnum_], std::move(clientsock)));
 
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
@@ -68,7 +68,7 @@ void TcpServer::closeconnection(spConnection conn)
     printf("1客户端(eventfd=%d) 断开连接.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
-    // delete conn;
+    
 }
 
 void TcpServer::errorconnection(spConnection conn)
@@ -77,7 +77,7 @@ void TcpServer::errorconnection(spConnection conn)
     printf("3客户端(eventfd=%d) 发生错误.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
-    // delete conn;
+    
 }
 
 void TcpServer::onmessage(spConnection conn, std::string& message)

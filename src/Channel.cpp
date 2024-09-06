@@ -3,7 +3,7 @@
 #include "../include/Socket.h"
 #include "../include/Eventloop.h"
 
-Channel::Channel(Eventloop* loop, int fd):loop_(loop), fd_(fd)
+Channel::Channel(const std::unique_ptr<Eventloop>& loop, int fd):loop_(loop), fd_(fd)
 {
 
 }
@@ -28,36 +28,36 @@ void Channel::enablereading()
     events_ = events_|EPOLLIN;
     // events_ |= EPOLLIN;
 
-    loop_->ep()->updatechannel(this);
+    loop_->updatechannel(this);
 }
 
 void Channel::disablereading()
 {
     events_ &= ~EPOLLIN;
-    loop_->ep()->updatechannel(this);
+    loop_->updatechannel(this);
 }
 
 void Channel::enablewriting()
 {
     events_ |= EPOLLOUT;
-    loop_->ep()->updatechannel(this);
+    loop_->updatechannel(this);
 }
 
 void Channel::diablewriting()
 {
     events_ &= ~EPOLLOUT;
-    loop_->ep()->updatechannel(this);
+    loop_->updatechannel(this);
 }
 
 void Channel::disableall()
 {
     events_ = 0;
-    loop_->ep()->updatechannel(this);
+    loop_->updatechannel(this);
 }
 void Channel::remove()
 {
     disableall();
-    loop_->ep()->removechannel(this);   // 从红黑树上删除fd
+    loop_->removechannel(this);   // 从红黑树上删除fd
 
 }
 

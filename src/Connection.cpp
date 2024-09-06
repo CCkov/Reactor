@@ -1,10 +1,10 @@
 #include "../include/Connection.h"
 
-Connection::Connection(Eventloop *loop, Socket *clientsock)
-    :loop_(loop), clientsock_(clientsock), disconnect_(false)
+Connection::Connection(const std::unique_ptr<Eventloop>& loop, std::unique_ptr<Socket> clientsock)
+    :loop_(loop), clientsock_(std::move(clientsock)), disconnect_(false), clientChannel_(new Channel(loop_, clientsock_->fd()))
 {
-    clientChannel_ = new Channel(loop_, clientsock_->fd());
-
+    // clientChannel_ = new Channel(loop_, clientsock_->fd());
+    
     clientChannel_->setreadcallback(std::bind(&Connection::onmessage, this));  // 设置绑定
     clientChannel_->setclosecallback(std::bind(&Connection::closecallback, this));
     clientChannel_->seterrorcallback(std::bind(&Connection::errorcallback, this));
@@ -16,8 +16,8 @@ Connection::Connection(Eventloop *loop, Socket *clientsock)
 
 Connection::~Connection()
 {
-    delete clientChannel_;
-    delete clientsock_;
+    // delete clientChannel_;
+    // delete clientsock_;
 }
 
 int Connection::fd() const

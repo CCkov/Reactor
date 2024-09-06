@@ -8,15 +8,18 @@
 #include <map>
 #include <functional>
 #include <vector>
+#include <memory>
 
 class TcpServer
 {
 private:
-    Eventloop* mainloop_; // 主事件循环
-    std::vector<Eventloop*> subloops_;  // 存放从事件循环的容器
+    std::unique_ptr<Eventloop> mainloop_; // 主事件循环
+    std::vector<std::unique_ptr<Eventloop>> subloops_;  // 存放从事件循环的容器
     Acceptor* accrptor_;    // 一个TcpServer只用一个Acceptor对象
-    ThreadPool* threadpool_;    // 线程池
+    
     int threadnum_;
+    ThreadPool* threadpool_;    // 线程池
+    
     std::map<int ,spConnection> conns_;  // 一个TcpServer中有多个Connection对象，存放在map容器中
 
     std::function<void(spConnection)> newconnectioncallback_;
@@ -31,7 +34,7 @@ public:
     
     void start();
 
-    void newConnection(Socket* clientsock);
+    void newConnection(std::unique_ptr<Socket> clientsock);
     void closeconnection(spConnection conn); // 关闭客户端连接，在Connection类中回调此函数
     void errorconnection(spConnection conn); // 客户端的连接错误，在Connection类中回调此函数
     void onmessage(spConnection conn, std::string& message);    // 处理客户端的请求报文，在Connection类中回调此函数
