@@ -27,10 +27,10 @@ TcpServer::~TcpServer()
     delete mainloop_;
     
     // 释放全部Connection对象
-    for (auto &i : conns_)
-    {
-        delete i.second;
-    }
+    // for (auto &i : conns_)
+    // {
+    //     delete i.second;
+    // }
     
     for (auto &i : subloops_)
     {
@@ -47,7 +47,7 @@ void TcpServer::start()
 void TcpServer::newConnection(Socket* clientsock)
 {
     // Connection* conn = new Connection(mainloop_, clientsock);
-    Connection* conn = new Connection(subloops_[clientsock->fd() % threadnum_], clientsock);
+    spConnection conn(new Connection(subloops_[clientsock->fd() % threadnum_], clientsock));
 
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
@@ -62,30 +62,30 @@ void TcpServer::newConnection(Socket* clientsock)
 
 }
 
-void TcpServer::closeconnection(Connection *conn)
+void TcpServer::closeconnection(spConnection conn)
 {
     closeconnectioncallback_(conn); // 回调EchoServer::
     printf("1客户端(eventfd=%d) 断开连接.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
-    delete conn;
+    // delete conn;
 }
 
-void TcpServer::errorconnection(Connection *conn)
+void TcpServer::errorconnection(spConnection conn)
 {
     errorconnectioncallback_(conn);
     printf("3客户端(eventfd=%d) 发生错误.\n", conn->fd());
     // close(conn->fd());
     conns_.erase(conn->fd());
-    delete conn;
+    // delete conn;
 }
 
-void TcpServer::onmessage(Connection *conn, std::string& message)
+void TcpServer::onmessage(spConnection conn, std::string& message)
 {
     onmessagecallback_(conn, message);
 }
 
-void TcpServer::sendcomplate(Connection *conn)
+void TcpServer::sendcomplate(spConnection conn)
 {
     // printf("Send complate\n");
     sendcomplatecallback_(conn);
@@ -97,7 +97,7 @@ void TcpServer::epolltimeout(Eventloop *loop)
     timeoutcallback_(loop);
 }
 
-void TcpServer::setnewconnectioncallback(std::function<void(Connection *)> fn)
+void TcpServer::setnewconnectioncallback(std::function<void(spConnection)> fn)
 {
     newconnectioncallback_ = fn;
 }
@@ -107,22 +107,22 @@ void TcpServer::settimeoutcallback(std::function<void(Eventloop*)> fn)
     timeoutcallback_ = fn;
 }
 
-void TcpServer::setsendcomplatecallback(std::function<void(Connection *)> fn)
+void TcpServer::setsendcomplatecallback(std::function<void(spConnection)> fn)
 {
     sendcomplatecallback_ = fn;
 }
 
-void TcpServer::setonmessagecallback(std::function<void(Connection *, std::string &message)> fn)
+void TcpServer::setonmessagecallback(std::function<void(spConnection, std::string &message)> fn)
 {
     onmessagecallback_ = fn;
 }
 
-void TcpServer::seterrorconnectioncallback(std::function<void(Connection *)> fn)
+void TcpServer::seterrorconnectioncallback(std::function<void(spConnection)> fn)
 {
     errorconnectioncallback_ = fn;
 }
 
-void TcpServer::setcloseconnectioncallback(std::function<void(Connection *)> fn)
+void TcpServer::setcloseconnectioncallback(std::function<void(spConnection)> fn)
 {
     closeconnectioncallback_ = fn;
 }

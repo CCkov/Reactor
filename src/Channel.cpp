@@ -49,6 +49,18 @@ void Channel::diablewriting()
     loop_->ep()->updatechannel(this);
 }
 
+void Channel::disableall()
+{
+    events_ = 0;
+    loop_->ep()->updatechannel(this);
+}
+void Channel::remove()
+{
+    disableall();
+    loop_->ep()->removechannel(this);   // 从红黑树上删除fd
+
+}
+
 void Channel::setinepoll()
 {
     inepoll_ = true;
@@ -78,19 +90,11 @@ void Channel::handleevent()
 {
     if (revents_ & EPOLLRDHUP)  // 对方已关闭，
     {
-        
-        closecallback_();
+        remove();
+        closecallback_();   // 回调Connection::closecallback()
     }
     else if (revents_ & (EPOLLIN | EPOLLPRI))   // 接受缓冲区中有数据可以读
     {
-        // if (islisten_ == true)
-        // {
-        //     newconnection(servsock);
-        // }
-        // else
-        // {
-        //     onmessage();         
-        // }
         readcallback_();
     }
     else if (revents_ & EPOLLOUT)   // 发送缓冲区有数据要发
@@ -99,6 +103,7 @@ void Channel::handleevent()
     }
     else{   // 其他事件视为错误
 
+        remove();
         errorcallback_();
     }
 }

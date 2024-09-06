@@ -20,19 +20,19 @@ void EchoServer::start()
     tcpserver_.start();
 }
 
-void EchoServer::HandleNewConnection(Connection *conn)
+void EchoServer::HandleNewConnection(spConnection conn)
 {
     std::cout << "New Connection Come in." << std::endl;
     
     // printf("EchoServer::HandleNewConnection() thread is %ld\n", syscall(SYS_gettid));
 }
 
-void EchoServer::HandleClose(Connection *conn)
+void EchoServer::HandleClose(spConnection conn)
 {
     std::cout << "EehoServer conn closed." << std::endl;
 }
 
-void EchoServer::HandleSendComplate(Connection *conn)
+void EchoServer::HandleSendComplate(spConnection conn)
 {
     std::cout << "Message send complate." << std::endl;
 }
@@ -42,7 +42,7 @@ void EchoServer::HandleTimeout(Eventloop *loop)
     std::cout << "EchoServer timeout." << std::endl;
 }
 
-void EchoServer::HandleMessage(Connection *conn, std::string &message)
+void EchoServer::HandleMessage(spConnection conn, std::string &message)
 {
     // printf("EchoServer::HandleMessage() thread is %ld\n", syscall(SYS_gettid));
 
@@ -50,14 +50,14 @@ void EchoServer::HandleMessage(Connection *conn, std::string &message)
     threadpool_.addtask(std::bind(&EchoServer::OnMessage, this, conn, message));
 }
 
-void EchoServer::OnMessage(Connection *conn, std::string &message)
+void EchoServer::OnMessage(spConnection conn, std::string &message)
 {
     message = "reply:" + message;
     // send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
     conn->send(message.data(), message.size()); // 把临时缓冲区中的数据直接send 出去
 }
 
-void EchoServer::HandleError(Connection *conn)
+void EchoServer::HandleError(spConnection conn)
 {
     std::cout << "EehoServer conn error." << std::endl;
 }

@@ -27,6 +27,8 @@ public:
 
     // std::vector<epoll_event> loop(int timeout = -1);
     std::vector<Channel*> loop(int timeout = -1);
+
+    void removechannel(Channel* ch);
 };
 
 
