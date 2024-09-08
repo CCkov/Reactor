@@ -3,7 +3,7 @@
 #include "../include/Socket.h"
 #include "../include/Eventloop.h"
 
-Channel::Channel(const std::unique_ptr<Eventloop>& loop, int fd):loop_(loop), fd_(fd)
+Channel::Channel(Eventloop* loop, int fd):loop_(loop), fd_(fd)
 {
 
 }

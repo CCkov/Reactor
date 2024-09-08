@@ -60,3 +60,8 @@ void ThreadPool::addtask(std::function<void()> task)
 
     condition_.notify_one();
 }
+
+size_t ThreadPool::size()
+{
+    return threads_.size();
+}

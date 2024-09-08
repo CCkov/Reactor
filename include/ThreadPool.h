@@ -25,4 +25,5 @@ public:
     ThreadPool(size_t threadnum, const std::string& threadtype);
     ~ThreadPool();
     void addtask(std::function<void()> task);
+    size_t size();  // 获取线程池大小
 };

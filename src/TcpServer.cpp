@@ -6,7 +6,7 @@ TcpServer::TcpServer(const uint16_t port, int threadnum)
 {
     mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
 
-    accrptor_ = new Acceptor(mainloop_, port);
+    accrptor_ = new Acceptor(mainloop_.get(), port);
     accrptor_->setnewConnectioncb(std::bind(&TcpServer::newConnection, this, std::placeholders::_1));
 
     // 创建从事件循环
@@ -47,7 +47,7 @@ void TcpServer::start()
 void TcpServer::newConnection(std::unique_ptr<Socket> clientsock)
 {
     // Connection* conn = new Connection(mainloop_, clientsock);
-    spConnection conn(new Connection(subloops_[clientsock->fd() % threadnum_], std::move(clientsock)));
+    spConnection conn(new Connection(subloops_[clientsock->fd() % threadnum_].get(), std::move(clientsock)));
 
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));

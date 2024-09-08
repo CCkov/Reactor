@@ -1,7 +1,7 @@
 #include "../include/Acceptor.h"
 #include "../include/Connection.h"
 
-Acceptor::Acceptor(const std::unique_ptr<Eventloop>& loop, uint16_t port)
+Acceptor::Acceptor(Eventloop* loop, uint16_t port)
     :loop_(loop)
 {
     servsock_ = new Socket(createNoblocking());
