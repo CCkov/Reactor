@@ -9,6 +9,7 @@
 #include <functional>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 class TcpServer
 {
@@ -19,6 +20,7 @@ private:
     
     int threadnum_;
     ThreadPool* threadpool_;    // 线程池
+    std::mutex mmutex_; // 保护conns_的互斥锁
     
     std::map<int ,spConnection> conns_;  // 一个TcpServer中有多个Connection对象，存放在map容器中
 
@@ -47,5 +49,7 @@ public:
     void setonmessagecallback(std::function<void(spConnection, std::string &message)> fn);
     void setsendcomplatecallback(std::function<void(spConnection)> fn);
     void settimeoutcallback(std::function<void(Eventloop*)> fn);
+
+    void removeconn(int fd);    // 删除conns_中的Connection对象，在eventloop::handletimer()中回调此函数
 };
 

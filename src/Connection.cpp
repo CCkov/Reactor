@@ -16,8 +16,8 @@ Connection::Connection(Eventloop* loop, std::unique_ptr<Socket> clientsock)
 
 Connection::~Connection()
 {
-    // delete clientChannel_;
-    // delete clientsock_;
+    printf("conn析构\n");
+
 }
 
 int Connection::fd() const
@@ -76,6 +76,7 @@ void Connection::onmessage()
                 inputbuffer_.erase(0, len+4);
 
                 printf("message(eventfd = %d)::%s\n", fd(), message.data());
+                lasttime_ = Timestamp::now();
                 onmessagecallback_(shared_from_this(), message);
                 
             }
@@ -144,6 +145,11 @@ void Connection::sendinloop(const char *data, size_t size)
 {
     outputbuffer_.appendwithhead(data, size);
     clientChannel_->enablewriting();// 注册写事件
+}
+
+bool Connection::timeout(time_t now, int val)
+{
+    return now - lasttime_.toint() > val;
 }
 
 void Connection::setclosecallback(std::function<void(spConnection)> fn)

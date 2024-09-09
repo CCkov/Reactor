@@ -2,7 +2,7 @@
 #include "../include/Connection.h"
 
 TcpServer::TcpServer(const uint16_t port, int threadnum)
-    :threadnum_(threadnum), mainloop_(new Eventloop)
+    :threadnum_(threadnum), mainloop_(new Eventloop(true))
 {
     mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
 
@@ -13,8 +13,9 @@ TcpServer::TcpServer(const uint16_t port, int threadnum)
     threadpool_ = new ThreadPool(threadnum_, "IO");
     for (int i = 0; i < threadnum_; i++)
     {
-        subloops_.emplace_back(new Eventloop); // 创建事件循环，存入subloops_容器中
+        subloops_.emplace_back(new Eventloop(false)); // 创建事件循环，存入subloops_容器中
         subloops_[i]->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
+        subloops_[i]->settimercallback(std::bind(&TcpServer::removeconn, this, std::placeholders::_1));
         threadpool_->addtask(std::bind(&Eventloop::run, subloops_[i].get())); // 在线程池中运行事件循环
     }
     
@@ -56,27 +57,45 @@ void TcpServer::newConnection(std::unique_ptr<Socket> clientsock)
     
     printf("接受客户端连接(fd=%d,ip=%s,port=%d) 成功.\n", conn->fd(), conn->ip().c_str(), conn->port());
 
-    conns_[conn->fd()] = conn;  // 把conn存放到map容器中
+    {
+        std::lock_guard<std::mutex> gd(mmutex_);
+        conns_[conn->fd()] = conn;  // 把conn存放到Tcpserver的map容器中
+    }
+    subloops_[conn->fd() % threadnum_]->newconnection(conn);  // 把conn存放到Eventloop的map容器中
 
-    newconnectioncallback_(conn);   // 回调EchoServer::HandleNewConnection()
+    if (newconnectioncallback_) newconnectioncallback_(conn);   // 回调EchoServer::HandleNewConnection()
 
 }
 
 void TcpServer::closeconnection(spConnection conn)
 {
-    closeconnectioncallback_(conn); // 回调EchoServer::
+    if (closeconnectioncallback_)
+    {
+        closeconnectioncallback_(conn); // 回调EchoServer::
+    }
     printf("1客户端(eventfd=%d) 断开连接.\n", conn->fd());
     // close(conn->fd());
-    conns_.erase(conn->fd());
+
+    {
+        std::lock_guard<std::mutex> gd(mmutex_);
+        conns_.erase(conn->fd());
+    }
+    
     
 }
 
 void TcpServer::errorconnection(spConnection conn)
 {
-    errorconnectioncallback_(conn);
+    if (errorconnectioncallback_)
+    {
+        errorconnectioncallback_(conn);
+    }
     printf("3客户端(eventfd=%d) 发生错误.\n", conn->fd());
     // close(conn->fd());
-    conns_.erase(conn->fd());
+    {
+        std::lock_guard<std::mutex> gd(mmutex_);
+        conns_.erase(conn->fd());
+    }
     
 }
 
@@ -125,4 +144,12 @@ void TcpServer::seterrorconnectioncallback(std::function<void(spConnection)> fn)
 void TcpServer::setcloseconnectioncallback(std::function<void(spConnection)> fn)
 {
     closeconnectioncallback_ = fn;
+}
+
+void TcpServer::removeconn(int fd)
+{
+    {
+        std::lock_guard<std::mutex> gd(mmutex_);
+        conns_.erase(fd);
+    }
 }
