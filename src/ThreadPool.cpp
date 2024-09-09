@@ -1,4 +1,5 @@
 #include "../include/ThreadPool.h"
+#include "ThreadPool.h"
 
 ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype)
     :stop_(false), threadtype_(threadtype)
@@ -8,7 +9,6 @@ ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype)
         // 用lambda函数创建线程
         threads_.emplace_back([this]
         {
-            printf("create %s thread is %ld\n",threadtype_.c_str(), syscall(SYS_gettid));
 
             while (stop_ == false)
             {
@@ -31,7 +31,6 @@ ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype)
                     
                     // 锁作用域结束
                 }
-                printf("%s(%ld) execute task\n",threadtype_.c_str() ,syscall(SYS_gettid));
                 task(); // 执行任务
             }
             
@@ -42,12 +41,7 @@ ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype)
 
 ThreadPool::~ThreadPool()
 {
-    stop_ = true;
-    condition_.notify_all();
-    for (std::thread &i : threads_)
-    {
-        i.join();
-    }
+    stop();
     
 }
 
@@ -64,4 +58,16 @@ void ThreadPool::addtask(std::function<void()> task)
 size_t ThreadPool::size()
 {
     return threads_.size();
+}
+
+void ThreadPool::stop()
+{
+    if (stop_) return;
+    
+    stop_ = true;
+    condition_.notify_all();
+    for (std::thread &i : threads_)
+    {
+        i.join();
+    }
 }

@@ -35,6 +35,7 @@ public:
     ~TcpServer();
     
     void start();
+    void stop();
 
     void newConnection(std::unique_ptr<Socket> clientsock);
     void closeconnection(spConnection conn); // 关闭客户端连接，在Connection类中回调此函数

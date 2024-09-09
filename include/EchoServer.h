@@ -16,6 +16,7 @@ public:
     ~EchoServer();
 
     void start();   // 启动服务
+    void stop();
 
     void HandleNewConnection(spConnection conn);
 

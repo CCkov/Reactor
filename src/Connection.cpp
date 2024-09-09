@@ -131,12 +131,10 @@ void Connection::send(const char *data, size_t size)
     if (loop_->isinloopthread())
     {
         // 如果当先线程是IO线程，直接执行发送数据的操作
-        printf("在IO线程中\n");
         sendinloop(data, size);
     }else
     {
         // 如果当先线程不是IO线程，调用Eventloop::queueinloop(), 把发送数据的操作交给事件循环线程去执行
-        printf("不在IO线程中\n");
         loop_->queueinloop(std::bind(&Connection::sendinloop, this, data, size));
     }
 }

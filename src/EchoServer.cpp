@@ -1,4 +1,5 @@
 #include "../include/EchoServer.h"
+#include "EchoServer.h"
 
 EchoServer::EchoServer(const uint16_t port, int subthreadnum, int workthreadnum)
     :tcpserver_(port, subthreadnum),threadpool_(workthreadnum, "WORKS")
@@ -18,6 +19,12 @@ EchoServer::~EchoServer()
 void EchoServer::start()
 {
     tcpserver_.start();
+}
+
+void EchoServer::stop()
+{
+    threadpool_.stop(); // 停止工作线程
+    
 }
 
 void EchoServer::HandleNewConnection(spConnection conn)

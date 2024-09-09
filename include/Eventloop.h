@@ -11,6 +11,7 @@
 #include <mutex>
 #include <sys/eventfd.h>
 #include <map>
+#include <atomic>
 
 class Epoll;
 class Channel;
@@ -36,13 +37,14 @@ private:
     std::map<int, spConnection> conns_; // 存放运行在该事件循环上的全部Connection对象
 
     std::function<void(int)> timercallback_;    // 删除TcpServer中超时的Connection对象，将被设置为TcpServer::removconn()
-
+    std::atomic_bool stop_;
 public:
     Eventloop(bool mainloop, int timetvl=30, int timeout=80);    // 在构造函数中创建epoll对象ep_
     ~Eventloop();   // 在析构函数中销毁ep_
 
     void run(); // 运行事件循环
     // Epoll* ep();
+    void stop();
 
     void updatechannel(Channel* ch);
     void setepolltimeoutcallback(std::function<void(Eventloop*)> fn);

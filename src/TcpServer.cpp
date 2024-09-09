@@ -1,5 +1,6 @@
 #include "../include/TcpServer.h"
 #include "../include/Connection.h"
+#include "TcpServer.h"
 
 TcpServer::TcpServer(const uint16_t port, int threadnum)
     :threadnum_(threadnum), mainloop_(new Eventloop(true))
@@ -43,6 +44,17 @@ TcpServer::~TcpServer()
 void TcpServer::start()
 {
     mainloop_->run();
+}
+
+void TcpServer::stop() {
+    mainloop_->stop();
+    printf("MainLoop stop ...\n");
+    for (int i = 0; i < threadnum_; i++) {
+        subloops_[i]->stop();
+    }
+    printf("SubLoop stop ...\n");
+    threadpool_->stop();
+    printf("ThreadPool stop ...\n");
 }
 
 void TcpServer::newConnection(std::unique_ptr<Socket> clientsock)
